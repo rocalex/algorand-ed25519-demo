@@ -1,6 +1,6 @@
 import assert from "assert";
 import * as dotenv from "dotenv";
-import * as ed from "@noble/ed25519";
+import nacl, { randomBytes } from "tweetnacl";
 import algosdk, { Algodv2, Account } from 'algosdk'
 import { getAlgodClient, waitForTransaction } from "./utils";
 
@@ -14,8 +14,11 @@ describe("Algorand offsig", function () {
     const enc = new TextEncoder()
 
     before(async () => {
-        privateKey = ed.utils.randomPrivateKey();
-        groupKey = await ed.getPublicKey(privateKey);
+        const seed = randomBytes(nacl.box.secretKeyLength)
+        const keypair = nacl.sign.keyPair.fromSeed(seed)
+        privateKey = keypair.secretKey
+        groupKey = keypair.publicKey
+
         algodClient = getAlgodClient();
         sender = algosdk.mnemonicToSecretKey(process.env.SENDER_MN || "")
     })
@@ -24,9 +27,11 @@ describe("Algorand offsig", function () {
         const rawData = Uint8Array.from([0xab, 0xbc, 0xcd, 0xde]);
         const programHash = algosdk.decodeAddress("M6RZUU6Y53PYTPLBY7Q6LCYKW6T52UMSDKQBCF6V2JGZG2NKCL4D5C7XYQ")
         const data = new Uint8Array([...enc.encode("ProgData"), ...programHash.publicKey, ...rawData])
-        
-        const signature = await ed.sign(data, privateKey);
-        const isValid = await ed.verify(signature, data, groupKey);
+
+        const signature = nacl.sign.detached(data, privateKey)
+
+        const isValid = nacl.sign.detached.verify(data, signature, groupKey)
+
         assert.ok(isValid == true)
     });
 
@@ -36,7 +41,8 @@ describe("Algorand offsig", function () {
         const rawData = Uint8Array.from([0xab, 0xbc, 0xcd, 0xde]);
         const programHash = algosdk.decodeAddress("M6RZUU6Y53PYTPLBY7Q6LCYKW6T52UMSDKQBCF6V2JGZG2NKCL4D5C7XYQ")
         const data = new Uint8Array([...enc.encode("ProgData"), ...programHash.publicKey, ...rawData])
-        const signature = await ed.sign(data, privateKey);
+
+        const signature = nacl.sign.detached(data, privateKey)
 
         const params = await algodClient.getTransactionParams().do()
 

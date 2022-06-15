@@ -22,8 +22,8 @@
     "typescript": "^4.7.3"
   },
   "dependencies": {
-    "@noble/ed25519": "^1.6.0",
     "algosdk": "^1.17.0",
-    "dotenv": "^16.0.1"
+    "dotenv": "^16.0.1",
+    "tweetnacl": "^1.0.3"
   }
 }
