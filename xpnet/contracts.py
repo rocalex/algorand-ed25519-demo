@@ -11,7 +11,8 @@ def approval_program():
     pub_key = Txn.application_args[4]
     on_verify = Seq(
         If(Btoi(Txn.application_args[1]) == Int(0)).Then(Seq(
-            Log(Itob(Ed25519Verify(data, sig, pub_key))),
+            Assert(Ed25519Verify(data, sig, pub_key)),
+            Approve()
         )),
         Approve()
     )

@@ -3,6 +3,7 @@ import * as dotenv from "dotenv";
 import * as ed from '@noble/ed25519'
 import algosdk, { Algodv2, Account } from 'algosdk'
 import { getAlgodClient, waitForTransaction } from "./utils";
+import { createHash } from "crypto";
 
 dotenv.config();
 
@@ -22,8 +23,9 @@ describe("Algorand offsig", function () {
     })
 
     it("verify in frontend", async () => {
-        const rawData = Uint8Array.from([0xab, 0xbc, 0xcd, 0xde]);
-        const programHash = algosdk.decodeAddress("M6RZUU6Y53PYTPLBY7Q6LCYKW6T52UMSDKQBCF6V2JGZG2NKCL4D5C7XYQ")
+        const message = enc.encode("test")
+        const rawData = createHash("SHA256").update(message).digest();;
+        const programHash = algosdk.decodeAddress("HSIHEIDTLZO5ZTEGVYLS5YASJKXCN52JK24BQ3QI7QZ3GR5JILTZ7ZM3MM")
         const data = new Uint8Array([...enc.encode("ProgData"), ...programHash.publicKey, ...rawData])
 
         const signature = await ed.sign(data, privateKey)
@@ -36,8 +38,9 @@ describe("Algorand offsig", function () {
     it("verify in app", async () => {
         let appId = parseInt(process.env.APP_ID || "")
 
-        const rawData = Uint8Array.from([0xab, 0xbc, 0xcd, 0xde]);
-        const programHash = algosdk.decodeAddress("M6RZUU6Y53PYTPLBY7Q6LCYKW6T52UMSDKQBCF6V2JGZG2NKCL4D5C7XYQ")
+        const message = enc.encode("test")
+        const rawData = createHash("SHA256").update(message).digest();
+        const programHash = algosdk.decodeAddress("HSIHEIDTLZO5ZTEGVYLS5YASJKXCN52JK24BQ3QI7QZ3GR5JILTZ7ZM3MM")
         const data = new Uint8Array([...enc.encode("ProgData"), ...programHash.publicKey, ...rawData])
 
         const signature = await ed.sign(data, privateKey)
@@ -51,7 +54,7 @@ describe("Algorand offsig", function () {
             appArgs: [
                 enc.encode("verify"),
                 new Uint8Array([0]),
-                rawData,
+                new Uint8Array(rawData),
                 signature,
                 groupKey,
             ]
