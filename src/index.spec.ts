@@ -53,7 +53,7 @@ describe("Algorand offsig", function () {
             appArgs: [
                 enc.encode("verify"),
                 new Uint8Array([0]),
-                data,
+                rawData,
                 signature,
                 groupKey,
             ]
