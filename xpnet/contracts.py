@@ -18,11 +18,8 @@ router = Router(
 
 
 @router.method
-def idle(a: abi.Uint64) -> Expr:
-    return Seq(
-        Log(Itob(a.get())),
-        Approve()
-    )
+def idle(a: abi.Uint64, *, output: abi.Uint64) -> Expr:
+    return output.set(a.get())
 
 @router.method
 def verify(data: abi.String, sig: abi.String, pub_key: abi.String) -> Expr:

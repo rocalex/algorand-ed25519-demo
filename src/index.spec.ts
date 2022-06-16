@@ -3,10 +3,18 @@ import * as dotenv from "dotenv";
 import * as ed from "@noble/ed25519";
 import * as fs from "fs";
 import algosdk, { Algodv2, Account, ABIContract } from "algosdk";
-import { getAlgodClient, waitForTransaction } from "./utils";
+import { getAlgodClient } from "./utils";
 import { createHash } from "crypto";
 
 dotenv.config();
+
+function getMethodByName(contract: ABIContract, name: string): algosdk.ABIMethod {
+    const m = contract.methods.find((mt: algosdk.ABIMethod) => {
+        return mt.name == name;
+    });
+    if (m === undefined) throw Error("Method undefined: " + name);
+    return m;
+}
 
 describe("Algorand offsig", function () {
     let privateKey: Uint8Array;
@@ -65,14 +73,6 @@ describe("Algorand offsig", function () {
 
         assert.ok(isValid == true);
 
-        function getMethodByName(name: string): algosdk.ABIMethod {
-            const m = contract.methods.find((mt: algosdk.ABIMethod) => {
-                return mt.name == name;
-            });
-            if (m === undefined) throw Error("Method undefined: " + name);
-            return m;
-        }
-
         const params = await algodClient.getTransactionParams().do();
         const commonParams = {
             appID: appId,
@@ -83,25 +83,23 @@ describe("Algorand offsig", function () {
 
         const comp = new algosdk.AtomicTransactionComposer();
         comp.addMethodCall({
-            method: getMethodByName("verify"),
+            method: getMethodByName(contract, "verify"),
             methodArgs: [rawData, signature, groupKey],
             ...commonParams,
         });
         comp.addMethodCall({
-            method: getMethodByName("idle"),
+            method: getMethodByName(contract, "idle"),
             methodArgs: [0],
             ...commonParams,
         });
         comp.addMethodCall({
-            method: getMethodByName("idle"),
+            method: getMethodByName(contract, "idle"),
             methodArgs: [1],
             ...commonParams,
         });
 
         const results = await comp.execute(algodClient, 4)
 
-        for (const result of results.methodResults) {
-            console.log(result.txInfo?.logs)
-        }
+        
     });
 });
