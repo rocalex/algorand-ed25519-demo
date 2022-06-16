@@ -3,7 +3,6 @@ from typing import Dict, Union, List, Any, Optional
 
 from algosdk import encoding
 from algosdk.v2client.algod import AlgodClient
-from pyteal import compileTeal, Expr, Mode
 
 
 def get_algod_client(host, port, token) -> AlgodClient:
