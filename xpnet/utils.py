@@ -51,8 +51,7 @@ def wait_for_transaction(
     return PendingTxnResponse(pending_txn)
 
 
-def fully_compile_contract(client: AlgodClient, contract: Expr) -> bytes:
-    teal = compileTeal(contract, mode=Mode.Application, version=6)
+def fully_compile_contract(client: AlgodClient, teal: str) -> bytes:
     response = client.compile(teal)
     return b64decode(response["result"]), response['hash']
 

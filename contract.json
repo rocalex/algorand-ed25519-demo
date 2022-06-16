@@ -1,0 +1,39 @@
+{
+  "name": "offsig-demo",
+  "methods": [
+    {
+      "name": "idle",
+      "args": [
+        {
+          "type": "uint64",
+          "name": "a"
+        }
+      ],
+      "returns": {
+        "type": "void"
+      }
+    },
+    {
+      "name": "verify",
+      "args": [
+        {
+          "type": "string",
+          "name": "data"
+        },
+        {
+          "type": "string",
+          "name": "sig"
+        },
+        {
+          "type": "string",
+          "name": "pub_key"
+        }
+      ],
+      "returns": {
+        "type": "void"
+      }
+    }
+  ],
+  "desc": null,
+  "networks": {}
+}

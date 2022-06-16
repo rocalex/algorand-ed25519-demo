@@ -1,62 +1,54 @@
+import os
+import json
+
 from pyteal import *
 
 
-def approval_program():
-    on_create = Seq(
+router = Router(
+    "offsig-demo",
+    BareCallActions(
+        no_op=OnCompleteAction.create_only(Approve()),
+        update_application=OnCompleteAction.call_only(Reject()),
+        delete_application=OnCompleteAction.call_only(Reject()),
+        close_out=OnCompleteAction.call_only(Reject()),
+        opt_in=OnCompleteAction.call_only(Approve()),
+        clear_state=OnCompleteAction.never()
+    ),
+)
+
+
+@router.method
+def idle(a: abi.Uint64) -> Expr:
+    return Seq(
+        Log(Itob(a.get())),
         Approve()
     )
 
-    data = Txn.application_args[1]
-    sig = Txn.application_args[2]
-    pub_key = Txn.application_args[3]
-    on_verify = Seq(
-        Assert(Ed25519Verify(data, sig, pub_key)),
+@router.method
+def verify(data: abi.String, sig: abi.String, pub_key: abi.String) -> Expr:
+    return Seq(
+        Assert(Ed25519Verify(data.get(), sig.get(), pub_key.get())),
         Approve()
     )
-    
-    on_idle = Seq(
-        Approve()
-    )
-
-    on_call_method = Txn.application_args[0]
-    on_call = Cond(
-        [on_call_method == Bytes("verify"), on_verify],
-        [on_call_method == Bytes("idle"), on_idle],
-    )
-
-    return Cond(
-        [Txn.application_id() == Int(0), on_create],
-        [Txn.on_completion() == OnComplete.NoOp, on_call],
-        [
-            Txn.on_completion() == OnComplete.OptIn,
-            Approve()
-        ],
-        [
-            Or(
-                Txn.on_completion() == OnComplete.UpdateApplication,
-                Txn.on_completion() == OnComplete.DeleteApplication,
-                Txn.on_completion() == OnComplete.CloseOut
-            ),
-            Reject()
-        ]
-    )
-
-
-def clear_program():
-    return Approve()
 
 
 if __name__ == '__main__':
-    with open("bridge_approval.teal", "w") as f:
-        compiled = compileTeal(
-            approval_program(),
-            mode=Mode.Application, version=6
-        )
-        f.write(compiled)
+    path = os.path.dirname(os.path.abspath(__file__))
 
-    with open("bridge_clear.teal", "w") as f:
-        compiled = compileTeal(
-            clear_program(),
-            mode=Mode.Application, version=6
-        )
-        f.write(compiled)
+    # we use compile program here to get the resulting teal code and Contract definition
+    # similarly we could use build_program to return the AST for approval/clear and compile it
+    # ourselves, but why?
+    approval, clear, contract = router.compile_program(
+        version=6, optimize=OptimizeOptions(scratch_slots=True)
+    )
+
+    # Dump out the contract as json that can be read in by any of the SDKs
+    with open(os.path.join(path, "contract.json"), "w") as f:
+        f.write(json.dumps(contract.dictify(), indent=2))
+
+    # Write out the approval and clear programs
+    with open(os.path.join(path, "approval.teal"), "w") as f:
+        f.write(approval)
+
+    with open(os.path.join(path, "clear.teal"), "w") as f:
+        f.write(clear)

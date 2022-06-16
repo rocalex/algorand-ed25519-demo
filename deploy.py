@@ -1,14 +1,18 @@
+import json
 import os
 
 import dotenv
 from algosdk.future import transaction
+from pyteal import OptimizeOptions
 
 from xpnet.account import Account
-from xpnet.contracts import approval_program, clear_program
 from xpnet.utils import fully_compile_contract, get_algod_client, wait_for_transaction
+from xpnet.contracts import router
 
 
 def main():
+    path = os.path.dirname(os.path.abspath(__file__))
+    
     dotenv_file = dotenv.find_dotenv()
     
     client = get_algod_client(
@@ -17,8 +21,16 @@ def main():
         os.environ.get("ALGOD_API_KEY")
     )
     sender = Account.from_mnemonic(os.environ.get("SENDER_MN"))
-    a, ah = fully_compile_contract(client, approval_program())
-    c, _ = fully_compile_contract(client, clear_program())
+    
+    approval, clear, contract = router.compile_program(
+        version=6, optimize=OptimizeOptions(scratch_slots=True)
+    )
+    
+    # Dump out the contract as json that can be read in by any of the SDKs
+    with open(os.path.join(path, "contract.json"), "w") as f:
+        f.write(json.dumps(contract.dictify(), indent=2))
+    a, ah = fully_compile_contract(client, approval)
+    c, _ = fully_compile_contract(client, clear)
 
     global_schema = transaction.StateSchema(num_uints=32, num_byte_slices=32)
     local_schema = transaction.StateSchema(num_uints=0, num_byte_slices=0)
