@@ -12,6 +12,8 @@ describe("Algorand offsig", function () {
     let groupKey: Uint8Array;
     let algodClient: Algodv2;
     let sender: Account;
+    let appId: number;
+    let programHash: Uint8Array;
     const enc = new TextEncoder()
 
     before(async () => {
@@ -20,13 +22,16 @@ describe("Algorand offsig", function () {
 
         algodClient = getAlgodClient();
         sender = algosdk.mnemonicToSecretKey(process.env.SENDER_MN || "")
+        appId = parseInt(process.env.APP_ID || "");
+        programHash = algosdk.decodeAddress(
+            process.env.PROGRAM_HASH || ""
+        ).publicKey;
     })
 
     it("verify in frontend", async () => {
         const message = enc.encode("test")
         const rawData = createHash("SHA256").update(message).digest();;
-        const programHash = algosdk.decodeAddress("HSIHEIDTLZO5ZTEGVYLS5YASJKXCN52JK24BQ3QI7QZ3GR5JILTZ7ZM3MM")
-        const data = new Uint8Array([...enc.encode("ProgData"), ...programHash.publicKey, ...rawData])
+        const data = new Uint8Array([...enc.encode("ProgData"), ...programHash, ...rawData])
 
         const signature = await ed.sign(data, privateKey)
 
@@ -40,8 +45,7 @@ describe("Algorand offsig", function () {
 
         const message = enc.encode("test")
         const rawData = createHash("SHA256").update(message).digest();
-        const programHash = algosdk.decodeAddress("HSIHEIDTLZO5ZTEGVYLS5YASJKXCN52JK24BQ3QI7QZ3GR5JILTZ7ZM3MM")
-        const data = new Uint8Array([...enc.encode("ProgData"), ...programHash.publicKey, ...rawData])
+        const data = new Uint8Array([...enc.encode("ProgData"), ...programHash, ...rawData])
 
         const signature = await ed.sign(data, privateKey)
 
@@ -53,7 +57,6 @@ describe("Algorand offsig", function () {
             appIndex: appId,
             appArgs: [
                 enc.encode("verify"),
-                new Uint8Array([0]),
                 new Uint8Array(rawData),
                 signature,
                 groupKey,
@@ -64,8 +67,8 @@ describe("Algorand offsig", function () {
             suggestedParams: params,
             appIndex: appId,
             appArgs: [
-                enc.encode("verify"),
-                new Uint8Array([1]),
+                enc.encode("idle"),
+                new Uint8Array([0]),
             ]
         })
         let txn3 = algosdk.makeApplicationNoOpTxnFromObject({
@@ -73,8 +76,8 @@ describe("Algorand offsig", function () {
             suggestedParams: params,
             appIndex: appId,
             appArgs: [
-                enc.encode("verify"),
-                new Uint8Array([2]),
+                enc.encode("idle"),
+                new Uint8Array([1]),
             ]
         })
         algosdk.assignGroupID([txn, txn2, txn3])

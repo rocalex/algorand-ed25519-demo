@@ -6,20 +6,22 @@ def approval_program():
         Approve()
     )
 
-    data = Txn.application_args[2]
-    sig = Txn.application_args[3]
-    pub_key = Txn.application_args[4]
+    data = Txn.application_args[1]
+    sig = Txn.application_args[2]
+    pub_key = Txn.application_args[3]
     on_verify = Seq(
-        If(Btoi(Txn.application_args[1]) == Int(0)).Then(Seq(
-            Assert(Ed25519Verify(data, sig, pub_key)),
-            Approve()
-        )),
+        Assert(Ed25519Verify(data, sig, pub_key)),
+        Approve()
+    )
+    
+    on_idle = Seq(
         Approve()
     )
 
     on_call_method = Txn.application_args[0]
     on_call = Cond(
         [on_call_method == Bytes("verify"), on_verify],
+        [on_call_method == Bytes("idle"), on_idle],
     )
 
     return Cond(
