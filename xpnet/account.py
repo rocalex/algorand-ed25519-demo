@@ -1,7 +1,4 @@
-import random
-from typing import List
 from algosdk import account, mnemonic
-from algosdk.future import transaction
 
 
 class Account:

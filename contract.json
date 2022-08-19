@@ -2,18 +2,6 @@
   "name": "offsig-demo",
   "methods": [
     {
-      "name": "idle",
-      "args": [
-        {
-          "type": "uint64",
-          "name": "a"
-        }
-      ],
-      "returns": {
-        "type": "uint64"
-      }
-    },
-    {
       "name": "verify",
       "args": [
         {
@@ -34,6 +22,5 @@
       }
     }
   ],
-  "desc": null,
   "networks": {}
 }

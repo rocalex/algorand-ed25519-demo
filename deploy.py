@@ -12,20 +12,20 @@ from xpnet.contracts import router
 
 def main():
     path = os.path.dirname(os.path.abspath(__file__))
-    
+
     dotenv_file = dotenv.find_dotenv()
-    
+
     client = get_algod_client(
         os.environ.get("ALGOD_HOST"),
         os.environ.get("ALGOD_PORT"),
-        os.environ.get("ALGOD_API_KEY")
+        os.environ.get("ALGOD_API_KEY"),
     )
     sender = Account.from_mnemonic(os.environ.get("SENDER_MN"))
-    
+
     approval, clear, contract = router.compile_program(
         version=6, optimize=OptimizeOptions(scratch_slots=True)
     )
-    
+
     # Dump out the contract as json that can be read in by any of the SDKs
     with open(os.path.join(path, "contract.json"), "w") as f:
         f.write(json.dumps(contract.dictify(), indent=2))
@@ -56,7 +56,7 @@ def main():
     dotenv.set_key(dotenv_file, "PROGRAM_HASH", ah)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     dotenv.load_dotenv(".env")
 
     main()

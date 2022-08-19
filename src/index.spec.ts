@@ -74,6 +74,8 @@ describe("Algorand offsig", function () {
         assert.ok(isValid == true);
 
         const params = await algodClient.getTransactionParams().do();
+        params.flatFee = true
+        params.fee = 4000
         const commonParams = {
             appID: appId,
             sender: sender.addr,
@@ -82,19 +84,18 @@ describe("Algorand offsig", function () {
         };
 
         const comp = new algosdk.AtomicTransactionComposer();
+        comp.addTransaction({
+            txn: algosdk.makePaymentTxnWithSuggestedParamsFromObject({
+                from: sender.addr,
+                to: algosdk.getApplicationAddress(appId),
+                suggestedParams: params,
+                amount: 100_000
+            }),
+            signer: algosdk.makeBasicAccountTransactionSigner(sender)
+        })
         comp.addMethodCall({
             method: getMethodByName(contract, "verify"),
             methodArgs: [rawData, signature, groupKey],
-            ...commonParams,
-        });
-        comp.addMethodCall({
-            method: getMethodByName(contract, "idle"),
-            methodArgs: [0],
-            ...commonParams,
-        });
-        comp.addMethodCall({
-            method: getMethodByName(contract, "idle"),
-            methodArgs: [1],
             ...commonParams,
         });
 

@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "ts-mocha -p ./tsconfig.json -t 1000000 src/**/*.spec.ts",
+    "test": "NODE_ENV=development ts-mocha -p ./tsconfig.json -t 1000000 src/**/*.spec.ts",
     "lint:fix": "prettier */*.js \"src/**/*{.js,.ts}\" -w",
     "lint": "prettier */*.js \"src/**/*{.js,.ts}\" --check"
   },

@@ -1,2 +1,3 @@
 python-dotenv
--e git+https://github.com/algorand/pyteal.git@feature/abi#egg=pyteal
+pyteal
+black
